@@ -5,7 +5,17 @@ var CG_AssetsMap = {
     // ==========================================
 
     // 【SFW 日常】------------------------------
-    // (暂空，预留位置)
+    // --- 泳装 ---
+    "SFW_林岁岁_泳装_1": "https://i.postimg.cc/VLkg3ZF0/linsuisui-swimsuit-1.jpg",
+    "SFW_林岁岁_泳装_2": "https://i.postimg.cc/J4zx9YQk/linsuisui-swimsuit-2.jpg",
+
+    // --- 校服 ---
+    "SFW_林岁岁_校服_1": "https://i.postimg.cc/YCJxLrwK/linsuisui-school-uniform-1.jpg",
+    "SFW_林岁岁_校服_2": "https://i.postimg.cc/CxW4nhpb/linsuisui-school-uniform-2.jpg",
+
+    // --- 教室 ---
+    "SFW_林岁岁_教室_1": "https://i.postimg.cc/XJgKP9GD/linsuisui-classroom-1.jpg",
+    "SFW_林岁岁_教室_2": "https://i.postimg.cc/0QCG47MX/linsuisui-classroom-2.jpg",
 
     // 【NSFW 亲密】-----------------------------
     // --- 抱入 ---
