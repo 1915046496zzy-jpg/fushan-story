@@ -1,9 +1,6 @@
-// ====== ui_fushan_map.js ======
+// ====== ui_fushan_map.js (三端自适应完美版) ======
 
-// 挂载到最高全局作用域，确保酒馆能读到
 (function(global) {
-    
-    // 1. 伏山地图核心数据库 (利用主-子场景层级结构，解决点位拥挤)
     global.fushanMapDatabase = {
         "伏山盆地": [
             { 
@@ -102,25 +99,25 @@
         ]
     };
 
-    // 记录当前选中的大区域
     global.currentFushanLoc = null;
 
-    // 注入独立 CSS (确保样式不被酒馆干扰)
     function injectFushanMapCSS() {
+        const doc = global.document;
         if(doc.getElementById('fs-map-app-css')) return;
         const style = doc.createElement('style');
         style.id = 'fs-map-app-css';
+        
+        // 【核心】注入了移动端 @media 响应式查询
         style.innerHTML = `
             .fs-map-layout {
                 width: 100%; height: 100%; display: flex; flex-direction: row;
                 font-family: "STKaiti", "Kaiti", serif; overflow: hidden;
-                background-color: #f3ead8; border-radius: 8px;
+                background-color: #f3ead8; border-radius: 8px; position: relative;
             }
             .fs-map-main {
                 flex: 1; position: relative; background: #e8dac4;
                 border-right: 2px solid #c29e70; overflow: hidden;
             }
-            /* 虚拟沙盘底图背景 */
             .fs-map-bg {
                 position: absolute; top: 0; left: 0; width: 100%; height: 100%;
                 background-image: 
@@ -140,9 +137,8 @@
                 letter-spacing: 1px;
             }
             
-            /* 右侧抽屉详情面板 */
             .fs-map-side-panel {
-                width: 0; background: #f9f8f4; transition: width 0.3s ease;
+                width: 0; background: #f9f8f4; transition: width 0.3s ease, right 0.3s ease;
                 display: flex; flex-direction: column; position: relative;
                 box-shadow: -5px 0 15px rgba(0,0,0,0.05); overflow-y: auto;
             }
@@ -151,7 +147,7 @@
             .fs-map-close-btn {
                 position: absolute; top: 15px; right: 15px; background: transparent;
                 border: 1px solid #c29e70; border-radius: 50%; width: 28px; height: 28px;
-                color: #4a3d30; cursor: pointer; transition: 0.2s;
+                color: #4a3d30; cursor: pointer; transition: 0.2s; z-index: 50;
             }
             .fs-map-close-btn:hover { background: #b34233; color: #fff; border-color: #b34233; }
             
@@ -181,7 +177,6 @@
             }
             .fs-map-back-btn:hover { background: #e8dac4; }
 
-            /* 左下角未定区域面板 */
             .fs-map-floating-menu {
                 position: absolute; bottom: 20px; left: 20px; background: rgba(243, 234, 216, 0.9);
                 border: 1px solid #c29e70; padding: 15px; border-radius: 8px; z-index: 10;
@@ -191,23 +186,41 @@
             .fs-map-floating-item { font-size: 13px; color: #4a3d30; padding: 6px 0; cursor: pointer; border-bottom: 1px dashed #e8dac4; }
             .fs-map-floating-item:last-child { border: none; padding-bottom: 0; }
             .fs-map-floating-item:hover { color: #b34233; }
+
+            /* ================================================== */
+            /* 📱 移动端与平板专属响应式优化 (Responsive Design)  */
+            /* ================================================== */
+            @media (max-width: 768px) {
+                .fs-map-main { border-right: none; }
+                
+                /* 手机端地标适当缩小，防止相互遮挡挤压 */
+                .fs-map-pin { font-size: 20px; transform: translate(-50%, -50%) scale(0.9); }
+                .fs-map-pin-name { font-size: 10px; padding: 2px 4px; }
+                
+                /* 手机端详情面板变为悬浮抽屉覆盖模式 */
+                .fs-map-side-panel {
+                    position: absolute; top: 0; right: -100%; height: 100%;
+                    width: 85% !important; z-index: 999;
+                    box-shadow: -10px 0 30px rgba(0,0,0,0.3);
+                }
+                .fs-map-side-panel.open { right: 0; }
+                
+                /* 手机端左下角菜单缩小 */
+                .fs-map-floating-menu { bottom: 10px; left: 10px; padding: 10px; }
+                .fs-map-floating-menu-title { font-size: 12px; margin-bottom: 6px;}
+                .fs-map-floating-item { font-size: 11px; padding: 4px 0;}
+            }
         `;
         doc.head.appendChild(style);
     }
 
-    const doc = global.document;
-
-    // 2. 核心渲染入口 (对应你原代码的 renderMapApp)
     global.renderFushanMapApp = function(container) {
         if (!container) return;
         injectFushanMapCSS();
 
         let mapHtml = '<div class="fs-map-layout">';
-        
-        // --- 左侧主地图区 ---
         mapHtml += '<div class="fs-map-main"><div class="fs-map-bg"></div>';
         
-        // 渲染坐标点
         if(global.fushanMapDatabase["伏山盆地"]) {
             global.fushanMapDatabase["伏山盆地"].forEach(loc => {
                 let locStr = encodeURIComponent(JSON.stringify(loc));
@@ -219,7 +232,6 @@
             });
         }
         
-        // 渲染未定区域悬浮菜单
         mapHtml += '<div class="fs-map-floating-menu">';
         mapHtml += '<div class="fs-map-floating-menu-title">卷宗 / 异闻录</div>';
         if(global.fushanMapDatabase["未定之域"]) {
@@ -228,9 +240,8 @@
                 mapHtml += `<div class="fs-map-floating-item" onclick="window.fsOpenMapLocation('${locStr}')">${loc.emoji} ${loc.name}</div>`;
             });
         }
-        mapHtml += '</div></div>'; // end main
+        mapHtml += '</div></div>'; 
 
-        // --- 右侧详情面板区 ---
         mapHtml += `
             <div class="fs-map-side-panel" id="fs-map-side-panel">
                 <button class="fs-map-close-btn" onclick="window.fsCloseMapSide()">✕</button>
@@ -241,7 +252,6 @@
         container.innerHTML = mapHtml;
     };
 
-    // 3. 交互方法：打开大区域 (对应 openMapLocation)
     global.fsOpenMapLocation = function(locStr) {
         let loc = JSON.parse(decodeURIComponent(locStr));
         global.currentFushanLoc = loc;
@@ -267,13 +277,12 @@
             mHtml += `<button class="fs-map-go-btn" onclick="window.fsSendAction('前往探索：${loc.name}')">前往该区域探索 ▶</button>`;
         }
 
-        let sideContent = doc.getElementById('fs-map-side-content');
-        let sidePanel = doc.getElementById('fs-map-side-panel');
+        let sideContent = global.document.getElementById('fs-map-side-content');
+        let sidePanel = global.document.getElementById('fs-map-side-panel');
         if(sideContent) sideContent.innerHTML = mHtml;
         if(sidePanel) sidePanel.classList.add('open');
     };
 
-    // 4. 交互方法：打开具体场景 (对应 openMapScene)
     global.fsOpenMapScene = function(scStr, parentName) {
         let sc = JSON.parse(decodeURIComponent(scStr));
 
@@ -284,24 +293,21 @@
             <button class="fs-map-go-btn" onclick="window.fsSendAction('前往场景：${sc.name}')">进入该场景 ▶</button>
             <button class="fs-map-back-btn" onclick="window.fsOpenMapLocation('${encodeURIComponent(JSON.stringify(global.currentFushanLoc))}')">◀ 返回区域概览</button>
         `;
-        let sideContent = doc.getElementById('fs-map-side-content');
+        let sideContent = global.document.getElementById('fs-map-side-content');
         if(sideContent) sideContent.innerHTML = mHtml;
     };
 
-    // 5. 交互方法：关闭侧边栏
     global.fsCloseMapSide = function() {
-        let sidePanel = doc.getElementById('fs-map-side-panel');
+        let sidePanel = global.document.getElementById('fs-map-side-panel');
         if(sidePanel) sidePanel.classList.remove('open');
     };
 
-    // 6. 交互方法：发送聊天指令 (接管酒馆的原生触发器)
     global.fsSendAction = function(text) {
         if (typeof triggerSlash === 'function') {
             triggerSlash('/setinput ' + text);
         } else {
             console.log("【指令触发】", text);
         }
-        // 发送完毕后自动关闭面板
         global.fsCloseMapSide();
     };
 
